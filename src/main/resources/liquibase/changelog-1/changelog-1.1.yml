@@ -1,0 +1,43 @@
+databaseChangeLog:
+  - changeSet:
+      id: CreateAuthUserTable
+      author: e_rustam
+      changes:
+        - createTable:
+            tableName: auth_user
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: login
+                  type: varchar(255)
+              - column:
+                  name: password
+                  type: varchar(255)
+              - column:
+                  name: email
+                  type: varchar(255)
+              - column:
+                  name: phone_number
+                  type: varchar(255)
+              - column:
+                  name: created_at
+                  type: timestamp
+              - column:
+                  name: updated_at
+                  type: timestamp
+  - changeSet:
+      id: CreateUserAuthSequence
+      author: e_rustam
+      changes:
+        - createSequence:
+            incrementBy: 50
+            sequenceName: auth_user_seq
+
+
+
+
