@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Pattern;
 
@@ -15,10 +16,10 @@ import javax.validation.constraints.Pattern;
 @NoArgsConstructor
 public class AuthUserDto {
     Long id;
-    @NotEmpty
+    @NotBlank
     @Pattern(regexp = "[a-zA-Z0-9_.]{6,30}")
     private String login;
-    @NotEmpty
+    @NotBlank
     @Pattern(regexp = ".{8,30}")
     private String password;
     @Email

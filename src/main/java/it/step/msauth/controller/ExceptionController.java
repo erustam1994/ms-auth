@@ -1,4 +1,4 @@
-package it.step.msauth.dao.controller;
+package it.step.msauth.controller;
 
 import it.step.msauth.model.ExceptionDto;
 import it.step.msauth.model.exception.AuthUserException;
