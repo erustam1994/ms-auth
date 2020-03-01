@@ -1,7 +1,10 @@
 package it.step.msauth.controller;
 
+import it.step.msauth.mapper.HttpHeadersMapper;
 import it.step.msauth.model.AuthUserDto;
+import it.step.msauth.model.TokensSaver;
 import it.step.msauth.service.AuthUserService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,12 +22,14 @@ public class AuthUserController {
     }
 
     @PostMapping("sigh-in")
-    public AuthUserDto signIn(@Valid @RequestBody AuthUserDto authUserDto) {
-        return authUserService.sighIn(authUserDto);
+    public ResponseEntity<Void> signIn(@Valid @RequestBody AuthUserDto authUserDto) {
+        TokensSaver tokens = authUserService.sighIn(authUserDto);
+        return ResponseEntity.ok().headers(HttpHeadersMapper.tokenSaverToHttpsHeaders(tokens)).build();
     }
 
     @PostMapping("sigh-up")
     public AuthUserDto signUp(@Valid @RequestBody AuthUserDto authUserDto) {
         return authUserService.signUp(authUserDto);
     }
+
 }
