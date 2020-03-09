@@ -6,5 +6,5 @@ import it.step.msauth.model.TokensSaver;
 public interface AuthUserService {
     AuthUserDto signUp(AuthUserDto authUserDto);
 
-    TokensSaver sighIn(AuthUserDto authUserDto);
+    TokensSaver signIn(AuthUserDto authUserDto);
 }

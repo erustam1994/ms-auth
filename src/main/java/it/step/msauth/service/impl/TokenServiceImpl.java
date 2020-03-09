@@ -16,6 +16,8 @@ import it.step.msauth.model.TokensSaver;
 import it.step.msauth.model.exception.TokenException;
 import it.step.msauth.service.TokenService;
 import it.step.msauth.util.KeyGeneratorUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +28,8 @@ import java.util.UUID;
 
 @Service
 public class TokenServiceImpl implements TokenService {
+
+    private final Logger logger = LoggerFactory.getLogger(TokenServiceImpl.class);
 
     private final KeyGeneratorUtil keyGeneratorUtil;
     private final TokenRepository tokenRepository;
@@ -39,6 +43,7 @@ public class TokenServiceImpl implements TokenService {
     @Transactional
     public TokensSaver getTokens(Long userId) throws JOSEException, ParseException {
         tokenRepository.deactivateTokensById(userId);
+        logger.info("deleted old tokens, userId - {}", userId);
         return TokensSaver.builder()
                 .userId(userId)
                 .token(generateAndSaveToken(userId, TokenType.AUTH_TOKEN).serialize())
@@ -56,8 +61,9 @@ public class TokenServiceImpl implements TokenService {
                 if (id != null) return id;
             }
         } catch (ParseException | JOSEException | RuntimeException e) {
-            e.printStackTrace();
+            logger.error("JWT exception", e);
         }
+        logger.error("auth.invalid_token-{}", token);
         throw new TokenException("auth.invalid_token");
     }
 
@@ -66,6 +72,7 @@ public class TokenServiceImpl implements TokenService {
     public void logout(String token) {
         Long userId = verifyToken(token);
         tokenRepository.deactivateTokensById(userId);
+        logger.info("logout, userId - {}", userId);
     }
 
     @Override
@@ -79,21 +86,25 @@ public class TokenServiceImpl implements TokenService {
                 return getTokens(userId);
             }
         } catch (ParseException | JOSEException | RuntimeException e) {
-            e.printStackTrace();
+            logger.error("JWT exception", e);
         }
+        logger.error("auth.invalid_token-{}", refreshToken);
         throw new TokenException("auth.invalid_token");
     }
 
-    private boolean isTokenVerified(SignedJWT signedJWT, TokenType type) throws JOSEException, ParseException {
+    protected boolean isTokenVerified(SignedJWT signedJWT, TokenType type) throws JOSEException, ParseException {
         JWTClaimsSet jwtClaimsSet = signedJWT.getJWTClaimsSet();
+        logger.info("token verification, type - {}, userId - {}", type, jwtClaimsSet.getLongClaim("id"));
 
         JWSVerifier jwsVerifier = new RSASSAVerifier((RSAPublicKey)keyGeneratorUtil.getPublicKey());
         boolean isVerified = jwsVerifier.verify(signedJWT.getHeader(), signedJWT.getSigningInput(), signedJWT.getSignature());
+        logger.info("token valid - {}", isVerified);
 
         String uuid = UUID.fromString(signedJWT.getJWTClaimsSet().getStringClaim("uuid")).toString();
         boolean isNotLogout = tokenRepository.isValidToken(uuid, LocalDateTime.now(), type);
+        logger.info("token verification from base: {}", isVerified);
 
-        return isNotLogout && isVerified && isNotTimeOut(jwtClaimsSet);
+        return isNotLogout && isVerified;
     }
 
     private JWTClaimsSet generateClaimSetForToken(Long id, TokenType type) {
@@ -111,6 +122,7 @@ public class TokenServiceImpl implements TokenService {
         RSASSASigner rsa = new RSASSASigner(keyGeneratorUtil.getPrivateKey());
         SignedJWT token = new SignedJWT(header, authTokenClaimsSet);
         token.sign(rsa);
+        logger.info("add new token to db; userID - {}, tokenType - {}", userId, type);
         saveTokenByClaimsSet(authTokenClaimsSet, type);
         return token;
     }
@@ -124,15 +136,11 @@ public class TokenServiceImpl implements TokenService {
                 .build());
     }
 
-    private boolean isNotTimeOut(JWTClaimsSet jwtClaimsSet) throws ParseException {
-        String expiredDateTimeString = jwtClaimsSet.getStringClaim("expired");
-        LocalDateTime expiredDateTime = LocalDateTimeMapper.stringToLocalDateTime(expiredDateTimeString);
-        return expiredDateTime.compareTo(LocalDateTime.now()) >= 0;
-    }
-
     @Transactional
     public void deleteInvalidTokens() {
+        logger.info("delete all invalid tokens from base");
         tokenRepository.deleteAllByActiveFalse();
         tokenRepository.deleteAllByExpiredDateBefore(LocalDateTime.now());
+        logger.info("delete all invalid tokens from base");
     }
 }

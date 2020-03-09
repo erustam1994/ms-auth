@@ -23,7 +23,7 @@ public class AuthUserController {
 
     @PostMapping("sigh-in")
     public ResponseEntity<Void> signIn(@Valid @RequestBody AuthUserDto authUserDto) {
-        TokensSaver tokens = authUserService.sighIn(authUserDto);
+        TokensSaver tokens = authUserService.signIn(authUserDto);
         return ResponseEntity.ok().headers(HttpHeadersMapper.tokenSaverToHttpsHeaders(tokens)).build();
     }
 
