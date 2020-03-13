@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: CreateAuthUserIndex
+      author: e_rustam
+      changes:
+        - createIndex:
+            clustered: true
+            columns:
+              - column:
+                  name: login
+            indexName: idx_auth_user
+            tableName: auth_user
+            unique: true
+
+
+
+

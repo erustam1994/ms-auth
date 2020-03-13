@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ms-auth
+    username: postgres
+    password: root
+  liquibase:
+    enabled: true
+    change-log: classpath:liquibase/changelog-master.yml
+  jpa:
+    hibernate:
+      ddl-auto: none
